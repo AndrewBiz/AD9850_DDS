@@ -53,6 +53,7 @@ unsigned long time_last_fchange = 0;
 int backlight_state;
 unsigned long last_key_pressed_time = 0;
 boolean need_save_to_m0 = false;
+int sf_count = 0;
 
 void setup() {
   // Serial
@@ -87,6 +88,14 @@ void setup() {
 
 void loop() {
   delay(100);
+  //test
+  ++sf_count;
+  Serial.print(millis()); Serial.print(" : "); Serial.println(sf_count);
+  if(sf_count >= 10) {
+    set_frequency();
+    sf_count = 0;
+    Serial.println(millis());
+  }  
   if(((millis() - last_key_pressed_time) > SAVE_TO_M0_INTERVAL) and need_save_to_m0){
     save_to_memory(0);
     need_save_to_m0 = false;
