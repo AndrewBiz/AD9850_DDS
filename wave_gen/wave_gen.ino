@@ -75,7 +75,7 @@ void setup() {
   pinMode(FQ_UD, OUTPUT);
   pinMode(RESET, OUTPUT);
   pulseHigh(RESET);
-  delay(10);
+  delay(1000);
   pulseHigh(FQ_UD);  // this pulse enables serial mode on the AD9850 - Datasheet page 12.
   
   // init the frequency
@@ -196,6 +196,7 @@ void LCD_show_line2(String info){
 byte read_LCD_buttons(){      // read the buttons
   int key = analogRead(A0);   // read the value from the sensor 
   // buttons when read are centered at these valies: 0, 144, 329, 504, 741
+  // Serial.println(key);
   if (key < 850)  last_key_pressed_time = millis(); //any button pressed
   if (key > 1000) return btnNONE;  
   if (key < 50)   return btnDELTA;  
