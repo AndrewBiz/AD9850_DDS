@@ -53,6 +53,8 @@ unsigned long time_last_fchange = 0;
 int backlight_state;
 unsigned long last_key_pressed_time = 0;
 boolean need_save_to_m0 = false;
+boolean state_btn_pressed = false;
+byte btn_pressed = btnNONE;
 
 void setup() {
   // Serial
@@ -87,58 +89,70 @@ void setup() {
 
 void loop() {
   delay(100);
-  if(((millis() - last_key_pressed_time) > SAVE_TO_M0_INTERVAL) and need_save_to_m0){
-    save_to_memory(0);
-    need_save_to_m0 = false;
+  if( state_btn_pressed ){  //key was being pressed in the last cycle
+    if(read_LCD_buttons() == btnNONE){
+      // key UP = we have the key was pushed down and then released
+      state_btn_pressed = false;
+      switch(btn_pressed){
+        case btnMEMO1:{
+          Serial.println("Key btnMEMO1 pressed");
+          read_from_memory(1);
+          set_frequency();
+          need_save_to_m0 = true;
+          LCD_show_frequency();
+          LCD_show_frequency_delta(" ");
+          break;
+        }
+        case btnMEMO2:{
+          Serial.println("Key btnMEMO2 pressed");
+          read_from_memory(2);
+          set_frequency();
+          need_save_to_m0 = true;
+          LCD_show_frequency();
+          LCD_show_frequency_delta(" ");
+          break;
+        }
+        case btnUP:{
+          Serial.println("Key btnUP pressed");      
+          LCD_show_frequency_delta("+");
+          frequency_inc();
+          LCD_show_frequency();
+          break;
+        }
+        case btnDOWN:{
+          Serial.println("Key btnDOWN pressed");
+          LCD_show_frequency_delta("-");
+          frequency_dec();
+          LCD_show_frequency();
+          break;
+        }
+        case btnDELTA:{
+          Serial.println("Key btnDELTA pressed");
+          frequency_delta_index++;      
+          if (frequency_delta_index > MAX_FREQUENCY_INDEX) {
+            frequency_delta_index = 0;
+          } 
+          LCD_show_frequency_delta(" "); 
+          break;
+        }
+        case btnERROR:{
+          Serial.println("Key error");
+          lcd.print("BTN ERROR!!!");
+          break;
+        }
+      }
+    }
+  } 
+  else { // no keys was pressed in the last cycle
+    // saving to the memory M0 if needed
+//TODO last_key_pressed - to fix
+    if(((millis() - last_key_pressed_time) > SAVE_TO_M0_INTERVAL) and need_save_to_m0){
+      save_to_memory(0);
+      need_save_to_m0 = false;
+    }
+    btn_pressed = read_LCD_buttons();
+    if( (btn_pressed != btnNONE) and (btn_pressed != btnERROR) ) state_btn_pressed = true;
   }  
-  switch(read_LCD_buttons()){
-    case btnMEMO1:{
-      Serial.println("Key btnMEMO1 pressed");
-      read_from_memory(1);
-      set_frequency();
-      need_save_to_m0 = true;
-      LCD_show_frequency();
-      LCD_show_frequency_delta(" ");
-      break;
-    }
-    case btnMEMO2:{
-      Serial.println("Key btnMEMO2 pressed");
-      read_from_memory(2);
-      set_frequency();
-      need_save_to_m0 = true;
-      LCD_show_frequency();
-      LCD_show_frequency_delta(" ");
-      break;
-    }
-    case btnUP:{
-      Serial.println("Key btnUP pressed");      
-      LCD_show_frequency_delta("+");
-      frequency_inc();
-      LCD_show_frequency();
-      break;
-    }
-    case btnDOWN:{
-      Serial.println("Key btnDOWN pressed");
-      LCD_show_frequency_delta("-");
-      frequency_dec();
-      LCD_show_frequency();
-      break;
-    }
-    case btnDELTA:{
-      Serial.println("Key btnDELTA pressed");
-      frequency_delta_index++;      
-      if (frequency_delta_index > MAX_FREQUENCY_INDEX) {
-        frequency_delta_index = 0;
-      } 
-      LCD_show_frequency_delta(" "); 
-      break;
-    }
-    case btnERROR:{
-      Serial.println("Key error");
-      lcd.print("BTN ERROR!!!");
-      break;
-    }
-  }
 }
 
 // set frequency in AD9850
