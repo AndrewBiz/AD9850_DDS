@@ -41,11 +41,13 @@ LiquidCrystal lcd(RS, ENABLE, D4, D5, D6, D7);
 #define DEF_FREQUENCY_INDEX 5 //default freq index
 #define SAVE_TO_M0_INTERVAL 7000 //7 sec after the key was pressed current frequency will be saved to EEPROM 
 #define LONG_KEY_PRESS_INTERVAL 1000 //1 sec is considered long keypress
+#define REPEAT_KEY_PRESS_INTERVAL 300 //0,3 sec is considered to start autorepeat
 
 struct MemoryRecord{
   float frequency;
   byte frequency_delta_index;
 };
+
 float frequency = DEF_FREQUENCY; //frequency of VFO
 byte frequency_delta_index = DEF_FREQUENCY_INDEX;
 const float frequency_delta[] = {0.01, 0.1, 1, 10, 100, 1000, 10000, 100000, 1000000};
@@ -53,6 +55,7 @@ const byte EEPROM_address[] = {0, 5, 10};
 int backlight_state;
 boolean need_save_to_m0 = false;
 boolean state_btn_pressed = false;
+boolean state_btn_repeat = false;
 byte btn_pressed = btnNONE;
 unsigned long time_btn_pressed = 0;
 unsigned long time_btn_released = 0;
@@ -89,8 +92,33 @@ void setup() {
 
 void loop() {
   delay(50);
-  if( state_btn_pressed ){  //key was being pressed in the last cycle
+  
+  if( state_btn_pressed ){
+    //key was being pressed in the last cycle
     switch(read_LCD_buttons()){
+      case btnUP:{
+        // the key is kept pressed by the user
+        if( (millis() - time_btn_pressed) >= REPEAT_KEY_PRESS_INTERVAL){
+          state_btn_repeat = true;
+          Serial.println("Key btnUP repeat");      
+          LCD_show_frequency_delta("+");
+          frequency_inc();
+          LCD_show_frequency();
+        }
+        break;
+      }  //casebtnUP
+      case btnDOWN:{
+        // the key is kept pressed by the user
+        if( (millis() - time_btn_pressed) >= REPEAT_KEY_PRESS_INTERVAL){
+          state_btn_repeat = true;
+          Serial.println("Key btnDOWN repeat");
+          LCD_show_frequency_delta("-");
+          frequency_dec();
+          LCD_show_frequency();
+        }  
+        break;
+      } // case btnDOWN
+      
       case btnNONE:{
         // we have the key was pressed down and then released
         state_btn_pressed = false;
@@ -131,17 +159,21 @@ void loop() {
             break;
           }
           case btnUP:{
-            Serial.println("Key btnUP pressed");      
-            LCD_show_frequency_delta("+");
-            frequency_inc();
-            LCD_show_frequency();
+            if(!state_btn_repeat){ // in repeate mode will not trigger btn unpress function  
+              Serial.println("Key btnUP pressed");      
+              LCD_show_frequency_delta("+");
+              frequency_inc();
+              LCD_show_frequency();
+            }
             break;
           }
           case btnDOWN:{
-            Serial.println("Key btnDOWN pressed");
-            LCD_show_frequency_delta("-");
-            frequency_dec();
-            LCD_show_frequency();
+            if(!state_btn_repeat){ // in repeate mode will not trigger btn unpress function  
+              Serial.println("Key btnDOWN pressed");
+              LCD_show_frequency_delta("-");
+              frequency_dec();
+              LCD_show_frequency();
+            }  
             break;
           }
           case btnDELTA:{
@@ -159,8 +191,8 @@ void loop() {
             break;
           }
         } //switch
+        state_btn_repeat = false;
       } // case btnNONE
-      
     } // switch 
   } 
   else { // no keys was pressed in the last cycle
