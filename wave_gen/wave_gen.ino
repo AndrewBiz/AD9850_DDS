@@ -7,6 +7,8 @@
 #include <EEPROM.h>
 #include "Logging.h"
 
+#define LOGLEVEL LOG_LEVEL_DEBUG //see Logging.h for options
+
 // LCD keypad ARDUINO pins mapping:
 #define D4     4 //LCD data
 #define D5     5 //LCD data
@@ -63,7 +65,9 @@ unsigned long time_btn_released = 0;
 
 void setup() {
   // Serial
-  Serial.begin(9600);
+  // Serial.begin(9600);
+  Log.Init(LOGLEVEL, 38400L);
+  Log.Info("Test log message %d"CR, 101);
 
   // LCD setup
   lcd.begin(16, 2);
