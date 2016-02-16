@@ -9,6 +9,8 @@
 
 #define LOGLEVEL LOG_LEVEL_DEBUG //see Logging.h for options
 
+#define WAVE_GEN_VERSION "0.5.0"
+
 // LCD keypad ARDUINO pins mapping:
 #define D4     4 //LCD data
 #define D5     5 //LCD data
@@ -55,7 +57,6 @@ float frequency = DEF_FREQUENCY; //frequency of VFO
 byte frequency_delta_index = DEF_FREQUENCY_INDEX;
 const float frequency_delta[] = {0.01, 0.1, 1, 10, 100, 1000, 10000, 100000, 1000000};
 const byte EEPROM_address[] = {0, 5, 10};
-int backlight_state;
 boolean need_save_to_m0 = false;
 boolean state_btn_pressed = false;
 boolean state_btn_repeat = false;
@@ -64,16 +65,18 @@ unsigned long time_btn_pressed = 0;
 unsigned long time_btn_released = 0;
 
 void setup() {
-  // Serial
-  // Serial.begin(9600);
   Log.Init(LOGLEVEL, 38400L);
-  Log.Info("Test log message %d"CR, 101);
-
+  Log.Info("Starting DDS Wave_Gen, version "WAVE_GEN_VERSION""CR);  
+  
   // LCD setup
   lcd.begin(16, 2);
   pinMode(D10, OUTPUT);   // backlight pin
-  backlight_state = HIGH; // backlight is ON when reset
-  digitalWrite(D10, backlight_state); 
+  digitalWrite(D10, HIGH); // backlight is ON when reset 
+  
+  // Initial screen
+  LCD_show_line(0, "AndrewBiz (C)");
+  LCD_show_line(1, "Wave_Gen v"WAVE_GEN_VERSION);
+  delay(1000);
 
   init_memory();
   
@@ -245,23 +248,20 @@ void transfer_byte(byte data) {
 
 // Show frequency
 void LCD_show_frequency(){
-  lcd.setCursor(0,0);
-  lcd.print("                ");
-  lcd.setCursor(0,0);
-  lcd.print(frequency);
-  lcd.print(" Hz");
+  String lcd_info = String(frequency) + " Hz";
+  LCD_show_line(0, lcd_info);
 }
 
 void LCD_show_frequency_delta(String prefix){
   String lcd_info = prefix + String(frequency_delta[frequency_delta_index]) + " Hz";
-  LCD_show_line2(lcd_info);
+  LCD_show_line(1, lcd_info);
 }
 
-// Show other info
-void LCD_show_line2(String info){
-  lcd.setCursor(0,1);  // move to the begining of the second line
+// Show info on LCD screen
+void LCD_show_line(byte line_number, String info){
+  lcd.setCursor(0, line_number);  // move to the begining of the line
   lcd.print("                ");
-  lcd.setCursor(0,1);  // move to the begining of the second line
+  lcd.setCursor(0, line_number);  // move to the begining of the line
   lcd.print(info);
 }
 
@@ -281,7 +281,7 @@ byte read_LCD_buttons(){      // read the buttons
 //init memory
 void init_memory() {
   for (byte i=0; i<3; i++) {
-    Serial.print("Initializing M"); Serial.println(i);
+    Log.Info("Initializing M%d"CR, i);  
     MemoryRecord m = { -1.0f, 99};
     EEPROM.get(EEPROM_address[i], m);
     float f = float(m.frequency);
@@ -290,8 +290,9 @@ void init_memory() {
     byte fdi = byte(m.frequency_delta_index);
     if(isnan(fdi)) fdi = 0;
     if(isinf(fdi)) fdi = 0;    
-    Serial.print("Read stored values: "); Serial.print(f);
-    Serial.print(", delta = "); Serial.println(frequency_delta[fdi]);
+    //!!!Log.Info("Read stored values: %s, delta = %s"CR, (char*)(f), (char*)(frequency_delta[fdi]) );  
+    //Serial.print("Read stored values: "); Serial.print(f);
+    //Serial.print(", delta = "); Serial.println(frequency_delta[fdi]);
     if((f <= MIN_FREQUENCY) or (f >= MAX_FREQUENCY)){
       m.frequency = DEF_FREQUENCY;
       Serial.print("Set new frequency: "); Serial.println(m.frequency); 
