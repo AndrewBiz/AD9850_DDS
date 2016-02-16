@@ -5,6 +5,7 @@
 
 #include <LiquidCrystal.h>
 #include <EEPROM.h>
+#include "Logging.h"
 
 // LCD keypad ARDUINO pins mapping:
 #define D4     4 //LCD data
