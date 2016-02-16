@@ -8,7 +8,7 @@ void Logging::Init(int level, long baud){
 
 void Logging::Error(char* msg, ...){
     if (LOG_LEVEL_ERRORS <= _level) {   
-		print ("ERROR: ",0);
+        print ("ERROR: ",0);
         va_list args;
         va_start(args, msg);
         print(msg,args);
@@ -18,6 +18,7 @@ void Logging::Error(char* msg, ...){
 
 void Logging::Info(char* msg, ...){
     if (LOG_LEVEL_INFOS <= _level) {
+        Serial.print(String(millis())+"ms: ");
         va_list args;
         va_start(args, msg);
         print(msg,args);
@@ -83,6 +84,10 @@ void Logging::Verbose(char* msg, ...){
 			}
             if( *format == 'l' ) {
 				Serial.print(va_arg( args, long ),DEC);
+				continue;
+			}
+            if( *format == '2' ) {
+				Serial.print(va_arg( args, float ),2);
 				continue;
 			}
 
