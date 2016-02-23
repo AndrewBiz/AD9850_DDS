@@ -1,6 +1,3 @@
-// Logging library forked from https://github.com/NOX73/Arduino-logging-library.git
-// Modified by AndrewBiz
-
 #include "Logging.h"
 
 void Logging::Init(int level, long baud){
@@ -108,4 +105,11 @@ void Logging::printFormat(const char format, va_list *args) {
 }
 
  Logging Log = Logging();
+
+ 
+ 
+  
+
+
+
 

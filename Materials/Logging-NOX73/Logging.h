@@ -1,6 +1,3 @@
-// Logging library forked from https://github.com/NOX73/Arduino-logging-library.git
-// Modified by AndrewBiz
-
 #ifndef LOGGING_H
 #define LOGGING_H
 #include <inttypes.h>
