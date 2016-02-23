@@ -3,10 +3,11 @@
 
 #include "Logging.h"
 
-void Logging::Init(int level, long baud, bool print_ts){
+void Logging::Init(int level, long baud, bool print_ts, bool auto_ln){
   _level = constrain(level,LOG_LEVEL_NOOUTPUT,LOG_LEVEL_VERBOSE);
   _baud = baud;
   _print_ts = print_ts;
+  _auto_ln = auto_ln;
   Serial.begin(_baud);
 }
 

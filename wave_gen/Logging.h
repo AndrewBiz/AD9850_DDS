@@ -75,6 +75,7 @@ private:
     int _level;
     long _baud;
     bool _print_ts;
+    bool _auto_ln;
 public:
     /*! 
 	 * default Constructor
@@ -87,7 +88,7 @@ public:
 	* \return void
 	*
 	*/
-    void Init(int level, long baud, bool print_ts);
+    void Init(int level, long baud, bool print_ts, bool auto_ln);
 	
     /**
 	* Output an error message. Output message contains
@@ -98,7 +99,6 @@ public:
 	* \param ... any number of variables
 	* \return void
 	*/
-
   template <class T> void Error(T msg, ...){
     if (LOG_LEVEL_ERRORS <= _level) {
       print (F("ERROR: "),0);
@@ -106,6 +106,7 @@ public:
       va_start(args, msg);
       print_ts();
       print(msg,args);
+      if(_auto_ln) Serial.println();
     }
   }
 
@@ -126,6 +127,7 @@ public:
       va_start(args, msg);
       print_ts();
       print(msg,args);
+      if(_auto_ln) Serial.println();
     }
   }
 
@@ -146,6 +148,7 @@ public:
       va_start(args, msg);
       print_ts();
       print(msg,args);
+      if(_auto_ln) Serial.println();
     }
   }
 
@@ -166,6 +169,7 @@ public:
       va_start(args, msg);
       print_ts();
       print(msg,args);
+      if(_auto_ln) Serial.println();
     }
   }
 
