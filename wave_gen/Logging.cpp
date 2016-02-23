@@ -3,9 +3,10 @@
 
 #include "Logging.h"
 
-void Logging::Init(int level, long baud){
+void Logging::Init(int level, long baud, bool print_ts){
   _level = constrain(level,LOG_LEVEL_NOOUTPUT,LOG_LEVEL_VERBOSE);
   _baud = baud;
+  _print_ts = print_ts;
   Serial.begin(_baud);
 }
 
@@ -108,7 +109,7 @@ void Logging::printFormat(const char format, va_list *args) {
 
 // Print of the Time Stamp
 void Logging::print_ts() {
-  if( LOG_PRINT_TS ) {
+  if( _print_ts ) {
     char tsbuf[16];
     sprintf( tsbuf, "%010lu ms: ", millis() );
     Serial.print(tsbuf);

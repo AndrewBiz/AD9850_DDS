@@ -8,8 +8,9 @@
 #include "Logging.h"
 
 #define LOGLEVEL LOG_LEVEL_DEBUG //see Logging.h for options
+#define LOG_PRINT_TS true  // print time stamp in logging
 
-#define WAVE_GEN_VERSION "0.5.1"
+#define WAVE_GEN_VERSION "0.6.0"
 
 // LCD keypad ARDUINO pins mapping:
 #define D4     4 //LCD data
@@ -20,7 +21,7 @@
 #define ENABLE 9 //LCD ENABLE
 #define D10   10 // LCD Backlight control
 
-LiquidCrystal lcd(RS, ENABLE, D4, D5, D6, D7);
+LiquidCrystal lcd( RS, ENABLE, D4, D5, D6, D7 );
 
 // LCD keypad button pins mapping
 #define btnNONE  0 // originally btnNONE
@@ -65,7 +66,7 @@ unsigned long time_btn_pressed = 0;
 unsigned long time_btn_released = 0;
 
 void setup() {
-  Log.Init(LOGLEVEL, 38400L);
+  Log.Init(LOGLEVEL, 38400L, LOG_PRINT_TS);
   Log.Info(F("Starting DDS Wave_Gen, version "WAVE_GEN_VERSION""CR));  
   
   // LCD setup

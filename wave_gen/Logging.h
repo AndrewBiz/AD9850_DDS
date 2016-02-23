@@ -22,11 +22,8 @@ extern "C" {
 #define LOG_LEVEL_DEBUG 3
 #define LOG_LEVEL_VERBOSE 4
 
-#define LOG_PRINT_TS 1 // print time stamp prefix (1) or dont print (0)
-
 // default loglevel if nothing is set from user
 #define LOGLEVEL LOG_LEVEL_DEBUG 
-
 
 #define CR "\r\n"
 #define LOGGING_VERSION 1
@@ -77,6 +74,7 @@ class Logging {
 private:
     int _level;
     long _baud;
+    bool _print_ts;
 public:
     /*! 
 	 * default Constructor
@@ -89,7 +87,7 @@ public:
 	* \return void
 	*
 	*/
-	void Init(int level, long baud);
+    void Init(int level, long baud, bool print_ts);
 	
     /**
 	* Output an error message. Output message contains
