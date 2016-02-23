@@ -22,6 +22,8 @@ extern "C" {
 #define LOG_LEVEL_DEBUG 3
 #define LOG_LEVEL_VERBOSE 4
 
+#define LOG_PRINT_TS 1 // print time stamp prefix (1) or dont print (0)
+
 // default loglevel if nothing is set from user
 #define LOGLEVEL LOG_LEVEL_DEBUG 
 
@@ -104,6 +106,7 @@ public:
       print (F("ERROR: "),0);
       va_list args;
       va_start(args, msg);
+      print_ts();
       print(msg,args);
     }
   }
@@ -123,6 +126,7 @@ public:
     if (LOG_LEVEL_INFOS <= _level) {
       va_list args;
       va_start(args, msg);
+      print_ts();
       print(msg,args);
     }
   }
@@ -142,6 +146,7 @@ public:
     if (LOG_LEVEL_DEBUG <= _level) {
       va_list args;
       va_start(args, msg);
+      print_ts();
       print(msg,args);
     }
   }
@@ -161,6 +166,7 @@ public:
     if (LOG_LEVEL_VERBOSE <= _level) {
       va_list args;
       va_start(args, msg);
+      print_ts();
       print(msg,args);
     }
   }
@@ -170,11 +176,9 @@ private:
     void print(const char *format, va_list args);
     void print(const __FlashStringHelper *format, va_list args);
     void printFormat(const char format, va_list *args);
+    void print_ts();
 };
 
 extern Logging Log;
 #endif
-
-
-
 

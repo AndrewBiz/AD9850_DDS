@@ -104,7 +104,15 @@ void Logging::printFormat(const char format, va_list *args) {
     }
     return;
   }
+}
 
+// Print of the Time Stamp
+void Logging::print_ts() {
+  if( LOG_PRINT_TS ) {
+    char tsbuf[16];
+    sprintf( tsbuf, "%010lu ms: ", millis() );
+    Serial.print(tsbuf);
+  }
 }
 
  Logging Log = Logging();
