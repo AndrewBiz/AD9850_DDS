@@ -11,7 +11,8 @@
 #define LOG_PRINT_TS true  // print time stamp in logging
 #define LOG_AUTO_LN  true  // print auto LN (CR) after each call
 
-#define WAVE_GEN_VERSION "0.7.0"
+#define WAVE_GEN_VERSION "0.8.0"
+#define DDS_DEVICE "AD9850"
 
 // LCD keypad ARDUINO pins mapping:
 #define D4     4 //LCD data
@@ -68,7 +69,7 @@ unsigned long time_btn_released = 0;
 
 void setup() {
   Log.Init(LOGLEVEL, 38400L, LOG_PRINT_TS, LOG_AUTO_LN);
-  Log.Info(F("Starting DDS Wave_Gen, version "WAVE_GEN_VERSION""CR));  
+  Log.Info(F("Starting DDS "DDS_DEVICE" Wave_Gen, version "WAVE_GEN_VERSION));  
   
   // LCD setup
   lcd.begin(16, 2);
@@ -76,7 +77,7 @@ void setup() {
   digitalWrite(D10, HIGH); // backlight is ON when reset 
   
   // Initial screen
-  LCD_show_line(0, F("AndrewBiz (C)"));
+  LCD_show_line(0, F("AndrewBiz (c)"));
   LCD_show_line(1, F("Wave_Gen v"WAVE_GEN_VERSION));
   delay(1000);
 
@@ -95,7 +96,7 @@ void setup() {
   pinMode(RESET, OUTPUT);
   pulseHigh(RESET);
   pulseHigh(FQ_UD);  // this pulse enables serial mode on the AD9850 - Datasheet page 12.
-  // sent initial frequency to AD9850 device
+  // sent initial frequency to DDS device
   set_frequency();
   set_frequency(); //experimentally found out - need to set 2 times
 }
@@ -110,7 +111,7 @@ void loop() {
         // the key is kept pressed by the user
         if( (millis() - time_btn_pressed) >= REPEAT_KEY_PRESS_INTERVAL){
           state_btn_repeat = true;
-          Serial.println("Key btnUP repeat"); //!!!
+          Log.Debug(F("Key btnUP repeat"));
           LCD_show_frequency_delta("+");
           frequency_inc();
           LCD_show_frequency();
@@ -121,7 +122,7 @@ void loop() {
         // the key is kept pressed by the user
         if( (millis() - time_btn_pressed) >= REPEAT_KEY_PRESS_INTERVAL){
           state_btn_repeat = true;
-          Serial.println("Key btnDOWN repeat"); //!!!
+          Log.Debug(F("Key btnDOWN repeat"));
           LCD_show_frequency_delta("-");
           frequency_dec();
           LCD_show_frequency();
@@ -136,7 +137,7 @@ void loop() {
           case btnMEMO1:
             if( (time_btn_released - time_btn_pressed) < LONG_KEY_PRESS_INTERVAL){
               // it was short key press
-              Serial.println("Key btnMEMO1 short pressed"); //!!!
+              Log.Debug(F("Key btnMEMO1 short pressed"));
               read_from_memory(1);
               set_frequency();
               need_save_to_m0 = true;
@@ -145,7 +146,7 @@ void loop() {
             }
             else {
               // it was long key press
-              Serial.println("Key btnMEMO1 long pressed"); //!!!
+              Log.Debug(F("Key btnMEMO1 long pressed"));
               save_to_memory(1);
             }  
             break;
@@ -153,7 +154,7 @@ void loop() {
           case btnMEMO2:
             if( (time_btn_released - time_btn_pressed) < LONG_KEY_PRESS_INTERVAL){
               // it was short key press
-              Serial.println("Key btnMEMO2 short pressed"); //!!!
+              Log.Debug(F("Key btnMEMO2 short pressed"));
               read_from_memory(2);
               set_frequency();
               need_save_to_m0 = true;
@@ -162,14 +163,14 @@ void loop() {
             }
             else {
               // it was long key press
-              Serial.println("Key btnMEMO2 long pressed"); //!!!
+              Log.Debug(F("Key btnMEMO2 long pressed"));
               save_to_memory(2);
             }  
             break;
           
           case btnUP:
             if(!state_btn_repeat){ // in repeate mode will not trigger btn unpress function  
-              Serial.println("Key btnUP pressed"); //!!!     
+              Log.Debug(F("Key btnUP pressed"));
               LCD_show_frequency_delta("+");
               frequency_inc();
               LCD_show_frequency();
@@ -178,7 +179,7 @@ void loop() {
           
           case btnDOWN:
             if(!state_btn_repeat){ // in repeate mode will not trigger btn unpress function  
-              Serial.println("Key btnDOWN pressed"); //!!!
+              Log.Debug(F("Key btnDOWN pressed"));
               LCD_show_frequency_delta("-");
               frequency_dec();
               LCD_show_frequency();
@@ -186,17 +187,19 @@ void loop() {
             break;
           
           case btnDELTA:
-            Serial.println("Key btnDELTA pressed"); //!!!
+            Log.Debug(F("Key btnDELTA pressed"));
             frequency_delta_index++;      
             if (frequency_delta_index > MAX_FREQUENCY_INDEX) {
               frequency_delta_index = 0;
-            } 
-            LCD_show_frequency_delta(" "); 
+            }
+            Log.Info(F("Delta = %l Hz"), long(frequency_delta[frequency_delta_index])); //!!
+            LCD_show_frequency_delta(" ");
+            need_save_to_m0 = true; 
             break;
           
           case btnERROR:
-            Serial.println("Key error"); //!!!
-            lcd.print(F("BTN ERROR!!!")); 
+            Log.Debug(F("Key error"));
+            lcd.print(F("BTN ERROR!")); 
             break;
           
         } // switch
@@ -218,43 +221,39 @@ void loop() {
   }  
 } // loop
 
-// set frequency in AD9850
+// set frequency into DDS_DEVICE
 void set_frequency() {
   // datasheet page 8: frequency = <sys clock> * <frequency tuning word>/2^32
-  // AD9850 allows an output frequency resolution of 0.0291 Hz with a 125 MHz reference clock applied
-  //double freq_tuning_word_d = frequency * 4294967295.0/125000000.0;  // note 125 MHz clock on 9850. You can make 'slight' tuning variations here by adjusting the clock frequency.
+  // DDS_DEVICE allows an output frequency resolution of 0.0291 Hz with a 125 MHz reference clock applied
+  // double freq_tuning_word_d = frequency * 4294967295.0/125000000.0;  // note 125 MHz clock on 9850. You can make 'slight' tuning variations here by adjusting the clock frequency.
   int32_t freq_tuning_word = frequency * 4294967295.0/125000000.0;  // note 125 MHz clock on 9850. You can make 'slight' tuning variations here by adjusting the clock frequency.
-  Serial.print("Setting frequency to AD9850: "); Serial.println(frequency); //!!!
-  Serial.print(freq_tuning_word); Serial.print(" = "); Serial.println(freq_tuning_word, BIN); //!!!
-
+  Log.Info(F("Setting frequency to "DDS_DEVICE": %l Hz"), long(frequency)); //!!
+  Log.Debug(F("Tuning word = %l"), freq_tuning_word);
+  
   for (int b=0; b<4; b++, freq_tuning_word>>=8) {
     transfer_byte(freq_tuning_word & 0xFF);
-    //Serial.print(" ");
   }
   transfer_byte(0x00); // Final control byte, all 0 for 9850 chip
   
   pulseHigh(FQ_UD);  // Done!  Should see output
-  Serial.println(); //!!!
 }
 
 // transfers a byte, a bit at a time, LSB first to the 9850 via serial DATA line
 void transfer_byte(byte data) {
   for (int i=0; i<8; i++, data>>=1) {
     digitalWrite(DATA, data & 0x01);
-    //Serial.print(data & 0x01);
-    //delay(5);
     pulseHigh(W_CLK); //after each bit sent, CLK is pulsed high
   }
 }
 
 // Show frequency
 void LCD_show_frequency(){
-  String lcd_info = String(frequency) + " Hz"; //!!!
+  String lcd_info = String(frequency) + " Hz"; //!!
   LCD_show_line(0, lcd_info);
 }
 
 void LCD_show_frequency_delta(String prefix){
-  String lcd_info = prefix + String(frequency_delta[frequency_delta_index]) + " Hz"; //!!!
+  String lcd_info = prefix + String(frequency_delta[frequency_delta_index]) + " Hz"; //!!
   LCD_show_line(1, lcd_info);
 }
 
@@ -282,7 +281,7 @@ byte read_LCD_buttons(){      // read the buttons
 //init memory
 void init_memory() {
   for (byte i=0; i<3; i++) {
-    Log.Info("Initializing M%d"CR, i);  
+    Log.Info(F("Initializing M%d"), i);  
     MemoryRecord m = { -1.0f, 99};
     EEPROM.get(EEPROM_address[i], m);
     float f = float(m.frequency);
@@ -291,19 +290,17 @@ void init_memory() {
     byte fdi = byte(m.frequency_delta_index);
     if(isnan(fdi)) fdi = 0;
     if(isinf(fdi)) fdi = 0;    
-    //!!!Log.Info("Read stored values: %s, delta = %s"CR, (char*)(f), (char*)(frequency_delta[fdi]) );  
-    //Serial.print("Read stored values: "); Serial.print(f);
-    //Serial.print(", delta = "); Serial.println(frequency_delta[fdi]);
+    Log.Info(F("Stored values: %l Hz, delta = %l Hz"), long(f), long(frequency_delta[fdi])); //!!
     if((f <= MIN_FREQUENCY) or (f >= MAX_FREQUENCY)){
       m.frequency = DEF_FREQUENCY;
-      Serial.print("Set new frequency: "); Serial.println(m.frequency); //!!! debug
+      Log.Debug(F("Saving new frequency: %l Hz"), long(m.frequency));
     }
     else {
       m.frequency = f;
     }
     if((fdi < 0) or (fdi > MAX_FREQUENCY_INDEX)){
       m.frequency_delta_index = DEF_FREQUENCY_INDEX;
-      Serial.print("Set new delta: "); Serial.println(frequency_delta[m.frequency_delta_index]); //!!! debug
+      Log.Debug(F("Saving new delta: %l Hz"), long(frequency_delta[m.frequency_delta_index]));
     }
     else {
       m.frequency_delta_index = fdi;
@@ -318,9 +315,7 @@ void read_from_memory(byte memory_slot){
   EEPROM.get(EEPROM_address[memory_slot], m);
   frequency = float(m.frequency);
   frequency_delta_index = byte(m.frequency_delta_index);
-  Serial.print("Read from EEPROM"); ; Serial.print(memory_slot); Serial.print(": "); //!!!
-  Serial.print(frequency); Serial.print(", delta ");
-  Serial.println(frequency_delta[frequency_delta_index]);
+  Log.Info(F("Read from EEPROM M%i: %l Hz, delta %l Hz"), memory_slot, long(frequency), long(frequency_delta[m.frequency_delta_index]));
   lcd.setCursor(14,0);
   lcd.print("M"); lcd.print(memory_slot);
   delay(800);
@@ -334,9 +329,7 @@ void save_to_memory(byte memory_slot){
     frequency_delta_index
   };
   EEPROM.put(EEPROM_address[memory_slot], m);
-  Serial.print("Saved to EEPROM"); Serial.print(memory_slot); Serial.print(": "); //!!!
-  Serial.print(frequency); Serial.print(", delta ");
-  Serial.println(frequency_delta[frequency_delta_index]);
+  Log.Info(F("Saved to EEPROM M%i: %l Hz, delta %l Hz"), memory_slot, long(frequency), long(frequency_delta[m.frequency_delta_index]));
   for (byte i=0; i<3; i++) { 
     lcd.setCursor(14,0);
     lcd.print("M"); lcd.print(memory_slot);
