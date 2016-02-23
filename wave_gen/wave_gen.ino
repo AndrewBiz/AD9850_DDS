@@ -9,8 +9,9 @@
 
 #define LOGLEVEL LOG_LEVEL_DEBUG //see Logging.h for options
 #define LOG_PRINT_TS true  // print time stamp in logging
+#define LOG_AUTO_LN  true  // print auto LN (CR) after each call
 
-#define WAVE_GEN_VERSION "0.6.0"
+#define WAVE_GEN_VERSION "0.7.0"
 
 // LCD keypad ARDUINO pins mapping:
 #define D4     4 //LCD data
@@ -66,7 +67,7 @@ unsigned long time_btn_pressed = 0;
 unsigned long time_btn_released = 0;
 
 void setup() {
-  Log.Init(LOGLEVEL, 38400L, LOG_PRINT_TS);
+  Log.Init(LOGLEVEL, 38400L, LOG_PRINT_TS, LOG_AUTO_LN);
   Log.Info(F("Starting DDS Wave_Gen, version "WAVE_GEN_VERSION""CR));  
   
   // LCD setup
