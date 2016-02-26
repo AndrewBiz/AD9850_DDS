@@ -47,7 +47,7 @@ LiquidCrystal lcd( RS, ENABLE, D4, D5, D6, D7 );
 #define DEF_FREQUENCY 1000.0 //default freq
 #define MAX_FREQUENCY_INDEX 8
 #define DEF_FREQUENCY_INDEX 5 //default freq index
-#define SAVE_TO_M0_INTERVAL 7000 //7 sec after the key was pressed current frequency will be saved to EEPROM 
+#define SAVE_TO_M0_INTERVAL 7000 //7 sec after the key was pressed current frequency will be saved to EEPROM
 #define LONG_KEY_PRESS_INTERVAL 1000 //1 sec is considered long keypress
 #define REPEAT_KEY_PRESS_INTERVAL 300 //0,3 sec is considered to start autorepeat
 
@@ -60,29 +60,29 @@ float frequency = DEF_FREQUENCY; //frequency of VFO
 byte frequency_delta_index = DEF_FREQUENCY_INDEX;
 const float frequency_delta[] = {0.01, 0.1, 1, 10, 100, 1000, 10000, 100000, 1000000};
 const byte EEPROM_address[] = {0, 5, 10};
-boolean need_save_to_m0 = false;
-boolean state_btn_pressed = false;
-boolean state_btn_repeat = false;
+bool need_save_to_m0 = false;
+bool state_btn_pressed = false;
+bool state_btn_repeat = false;
 byte btn_pressed = btnNONE;
 unsigned long time_btn_pressed = 0;
 unsigned long time_btn_released = 0;
 
 void setup() {
   Log.Init(LOGLEVEL, 38400L, LOG_PRINT_TS, LOG_AUTO_LN);
-  Log.Info(F("Starting DDS "DDS_DEVICE" Wave_Gen, version "WAVE_GEN_VERSION));  
-  
+  Log.Info(F("Starting DDS "DDS_DEVICE" Wave_Gen, version "WAVE_GEN_VERSION));
+
   // LCD setup
   lcd.begin(16, 2);
   pinMode(D10, OUTPUT);   // backlight pin
-  digitalWrite(D10, HIGH); // backlight is ON when reset 
-  
+  digitalWrite(D10, HIGH); // backlight is ON when reset
+
   // Initial screen
   LCD_show_line(0, F("AndrewBiz (c)"));
   LCD_show_line(1, F("Wave_Gen v"WAVE_GEN_VERSION));
   delay(1000);
 
   init_memory();
-  
+
   //read from default memory slot
   read_from_memory(0);
 
@@ -103,7 +103,7 @@ void setup() {
 
 void loop() {
   delay(50);
-  
+
   if( state_btn_pressed ){
     //key was being pressed in the last cycle
     switch(read_LCD_buttons()){
@@ -117,7 +117,7 @@ void loop() {
           LCD_show_frequency();
         }
         break; //casebtnUP
- 
+
       case btnDOWN:
         // the key is kept pressed by the user
         if( (millis() - time_btn_pressed) >= REPEAT_KEY_PRESS_INTERVAL){
@@ -126,9 +126,9 @@ void loop() {
           LCD_show_frequency_delta("-");
           frequency_dec();
           LCD_show_frequency();
-        }  
+        }
         break; // case btnDOWN
-      
+
       case btnNONE:
         // we have the key was pressed down and then released
         state_btn_pressed = false;
@@ -148,9 +148,9 @@ void loop() {
               // it was long key press
               Log.Debug(F("Key btnMEMO1 long pressed"));
               save_to_memory(1);
-            }  
+            }
             break;
-          
+
           case btnMEMO2:
             if( (time_btn_released - time_btn_pressed) < LONG_KEY_PRESS_INTERVAL){
               // it was short key press
@@ -165,48 +165,48 @@ void loop() {
               // it was long key press
               Log.Debug(F("Key btnMEMO2 long pressed"));
               save_to_memory(2);
-            }  
+            }
             break;
-          
+
           case btnUP:
-            if(!state_btn_repeat){ // in repeate mode will not trigger btn unpress function  
+            if(!state_btn_repeat){ // in repeate mode will not trigger btn unpress function
               Log.Debug(F("Key btnUP pressed"));
               LCD_show_frequency_delta("+");
               frequency_inc();
               LCD_show_frequency();
             }
             break;
-          
+
           case btnDOWN:
-            if(!state_btn_repeat){ // in repeate mode will not trigger btn unpress function  
+            if(!state_btn_repeat){ // in repeate mode will not trigger btn unpress function
               Log.Debug(F("Key btnDOWN pressed"));
               LCD_show_frequency_delta("-");
               frequency_dec();
               LCD_show_frequency();
-            }  
+            }
             break;
-          
+
           case btnDELTA:
             Log.Debug(F("Key btnDELTA pressed"));
-            frequency_delta_index++;      
+            frequency_delta_index++;
             if (frequency_delta_index > MAX_FREQUENCY_INDEX) {
               frequency_delta_index = 0;
             }
             Log.Info(F("Delta = %l Hz"), long(frequency_delta[frequency_delta_index])); //!!
             LCD_show_frequency_delta(" ");
-            need_save_to_m0 = true; 
+            need_save_to_m0 = true;
             break;
-          
+
           case btnERROR:
             Log.Debug(F("Key error"));
-            lcd.print(F("BTN ERROR!")); 
+            lcd.print(F("BTN ERROR!"));
             break;
-          
+
         } // switch
         state_btn_repeat = false;
         break; // case btnNONE
-    } // switch global 
-  } 
+    } // switch global
+  }
   else { // no keys was pressed in the last cycle
     // saving to the memory M0 if needed
     if(((millis() - time_btn_released) > SAVE_TO_M0_INTERVAL) and need_save_to_m0){
@@ -218,7 +218,7 @@ void loop() {
       state_btn_pressed = true;
       time_btn_pressed = millis();
     }
-  }  
+  }
 } // loop
 
 // set frequency into DDS_DEVICE
@@ -229,12 +229,12 @@ void set_frequency() {
   int32_t freq_tuning_word = frequency * 4294967295.0/125000000.0;  // note 125 MHz clock on 9850. You can make 'slight' tuning variations here by adjusting the clock frequency.
   Log.Info(F("Setting frequency to "DDS_DEVICE": %l Hz"), long(frequency)); //!!
   Log.Debug(F("Tuning word = %l"), freq_tuning_word);
-  
+
   for (int b=0; b<4; b++, freq_tuning_word>>=8) {
     transfer_byte(freq_tuning_word & 0xFF);
   }
   transfer_byte(0x00); // Final control byte, all 0 for 9850 chip
-  
+
   pulseHigh(FQ_UD);  // Done!  Should see output
 }
 
@@ -266,22 +266,22 @@ void LCD_show_line(byte line_number, String info){
 }
 
 byte read_LCD_buttons(){      // read the buttons
-  int key = analogRead(A0);   // read the value from the sensor 
+  int key = analogRead(A0);   // read the value from the sensor
   // buttons when read are centered at these valies: 0, 144, 329, 504, 741
   // Serial.println(key);
-  if (key > 1000) return btnNONE;  
-  if (key < 50)   return btnDELTA;  
-  if (key < 250)  return btnUP; 
-  if (key < 450)  return btnDOWN; 
-  if (key < 650)  return btnMEMO2; 
-  if (key < 850)  return btnMEMO1;  
+  if (key > 1000) return btnNONE;
+  if (key < 50)   return btnDELTA;
+  if (key < 250)  return btnUP;
+  if (key < 450)  return btnDOWN;
+  if (key < 650)  return btnMEMO2;
+  if (key < 850)  return btnMEMO1;
   return btnERROR;             // when all others fail, return this.
 }
 
 //init memory
 void init_memory() {
   for (byte i=0; i<3; i++) {
-    Log.Info(F("Initializing M%d"), i);  
+    Log.Info(F("Initializing M%d"), i);
     MemoryRecord m = { -1.0f, 99};
     EEPROM.get(EEPROM_address[i], m);
     float f = float(m.frequency);
@@ -289,7 +289,7 @@ void init_memory() {
     if(isinf(f)) f = 0.0;
     byte fdi = byte(m.frequency_delta_index);
     if(isnan(fdi)) fdi = 0;
-    if(isinf(fdi)) fdi = 0;    
+    if(isinf(fdi)) fdi = 0;
     Log.Info(F("Stored values: %l Hz, delta = %l Hz"), long(f), long(frequency_delta[fdi])); //!!
     if((f <= MIN_FREQUENCY) or (f >= MAX_FREQUENCY)){
       m.frequency = DEF_FREQUENCY;
@@ -304,7 +304,7 @@ void init_memory() {
     }
     else {
       m.frequency_delta_index = fdi;
-    }  
+    }
     EEPROM.put(EEPROM_address[i], m);
   }
 }
@@ -330,29 +330,28 @@ void save_to_memory(byte memory_slot){
   };
   EEPROM.put(EEPROM_address[memory_slot], m);
   Log.Info(F("Saved to EEPROM M%i: %l Hz, delta %l Hz"), memory_slot, long(frequency), long(frequency_delta[m.frequency_delta_index]));
-  for (byte i=0; i<3; i++) { 
+  for (byte i=0; i<3; i++) {
     lcd.setCursor(14,0);
     lcd.print("M"); lcd.print(memory_slot);
     delay(400);
     lcd.setCursor(14,0);
     lcd.print("  ");
     delay(500);
-  }  
-}  
+  }
+}
 
 void frequency_inc() {
-  if((frequency + frequency_delta[frequency_delta_index]) <= MAX_FREQUENCY) {  
+  if((frequency + frequency_delta[frequency_delta_index]) <= MAX_FREQUENCY) {
     frequency = frequency + frequency_delta[frequency_delta_index];
     set_frequency();
     need_save_to_m0 = true;
-  }  
+  }
 }
 
 void frequency_dec() {
-  if((frequency - frequency_delta[frequency_delta_index]) >= MIN_FREQUENCY) {  
+  if((frequency - frequency_delta[frequency_delta_index]) >= MIN_FREQUENCY) {
     frequency = frequency - frequency_delta[frequency_delta_index];
     set_frequency();
     need_save_to_m0 = true;
-  }  
+  }
 }
-
